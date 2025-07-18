@@ -24,7 +24,7 @@ export function Navigation({ activeSection, onSectionChange }: NavigationProps) 
     { id: "home", label: "Home", icon: Home },
     { id: "journal", label: "Journal", icon: BookOpen },
     { id: "music", label: "Music", icon: Music },
-    { id: "meditation", label: "Meditation", icon: Brain },
+    { id: "btmi", label: "BTMI", icon: Brain },
     { id: "guided", label: "Guided", icon: Compass },
     { id: "virtual-room", label: "Virtual Room", icon: Video },
     { id: "ai-companion", label: "AI Companion", icon: MessageCircle },

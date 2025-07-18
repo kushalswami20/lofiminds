@@ -4,7 +4,7 @@ import { useState } from "react"
 import { MoodSelector } from "@/components/mood-selector"
 import { JournalAssistant } from "@/components/journal-assistant"
 import { MusicPlayer } from "@/components/music-player"
-import { MeditationTools } from "@/components/meditation-tools"
+// import { MeditationTools } from "@/components/meditation-tools"
 import  CommunityFeed  from "@/components/community-feed"
 import { GuidedMeditation } from "@/components/guided-meditation"
 import { Navigation } from "@/components/navigation"
@@ -12,6 +12,7 @@ import  VirtualMeditationRoom  from "@/components/virtual-meditation-room"
 import { AIAvatarChat } from "@/components/ai-avatar-chat"
 import { CrisisSupport } from "@/components/crisis-support"
 // import { BookSession } from "../components/book-session"
+import { BTMIQuestionnaire } from "@/components/btmi-questionnaire"
 
 import BookSession from "../components/book-session"
 import { MindGames } from "@/components/mind-games"
@@ -29,8 +30,10 @@ export default function Home() {
         return <JournalAssistant mood={currentMood} />
       case "music":
         return <MusicPlayer mood={currentMood} />
-      case "meditation":
-        return <MeditationTools mood={currentMood} />
+      // case "meditation":
+      //   return <MeditationTools mood={currentMood} />
+      case "btmi":
+        return <BTMIQuestionnaire mood={currentMood} />
       case "guided":
         return <GuidedMeditation mood={currentMood} />
       case "community":
