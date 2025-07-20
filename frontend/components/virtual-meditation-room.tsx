@@ -156,6 +156,8 @@ export default function VirtualMeditationRoom() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const API_BASE_URL = "http://localhost:5010/api"
+  const ML_API_URL = "http://localhost:8000/score"
+
 
   const mockParticipants: Participant[] = [
     { id: 1, name: "Sarah M.", status: "meditating", calmScore: 92, expression: "peaceful", isReal: true },
@@ -354,33 +356,44 @@ export default function VirtualMeditationRoom() {
       originalData: session
     }
   }
+  function mapScoreToExpression(score: number) {
+  if (score > 0.1) return "happy"
+  if (score > 0.05) return "calm"
+  if (score > 0.03) return "neutral"
+  return "sad"
+}
 
   // Simulate ML Face Detection
   useEffect(() => {
-    let detectionInterval: NodeJS.Timeout
-    if (isInRoom && isVideoOn && faceDetection.isActive) {
-      detectionInterval = setInterval(() => {
-        // Simulate real-time emotion detection
-        const emotions = ["happy", "sad", "angry", "surprised", "fearful", "neutral"]
-        const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)]
-        const confidence = Math.floor(Math.random() * 30) + 70 // 70-100% confidence
+  let scoreInterval: NodeJS.Timeout
+
+  if (isInRoom && isVideoOn && faceDetection.isActive) {
+    scoreInterval = setInterval(async () => {
+      try {
+        const response = await fetch(ML_API_URL)
+        const data = await response.json()
+        const score = data.score || 0
+
+        const expression = mapScoreToExpression(score)
+        const confidence = Math.floor(score * 100)
 
         setFaceDetection((prev) => ({
           ...prev,
-          currentExpression: randomEmotion,
+          currentExpression: expression,
           confidence: confidence,
-          emotions: {
-            happy: randomEmotion === "happy" ? confidence : Math.floor(Math.random() * 20),
-            sad: randomEmotion === "sad" ? confidence : Math.floor(Math.random() * 15),
-            angry: randomEmotion === "angry" ? confidence : Math.floor(Math.random() * 10),
-            surprised: randomEmotion === "surprised" ? confidence : Math.floor(Math.random() * 15),
-            fearful: randomEmotion === "fearful" ? confidence : Math.floor(Math.random() * 10),
-            disgusted: Math.floor(Math.random() * 5),
-            neutral: randomEmotion === "neutral" ? confidence : Math.floor(Math.random() * 40) + 30,
-          },
         }))
 
-        // Draw face detection overlay
+        setAiAnalysis((prev) => ({
+          ...prev,
+          overallScore: confidence,
+          faceExpression: expression,
+          emotionalState: confidence > 80 ? "stable" : "fluctuating",
+          posture: Math.random() > 0.6 ? "good" : "adjusting",
+          breathing: Math.random() > 0.5 ? "regular" : "deep",
+          mlDetection: "active",
+        }))
+
+        // Drawing logic
         if (canvasRef.current && videoRef.current && videoRef.current.videoWidth > 0) {
           const canvas = canvasRef.current
           const ctx = canvas.getContext("2d")
@@ -390,34 +403,34 @@ export default function VirtualMeditationRoom() {
 
             ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-            // Simulate a face bounding box
             const faceX = canvas.width * 0.25
             const faceY = canvas.height * 0.2
             const faceWidth = canvas.width * 0.5
             const faceHeight = canvas.height * 0.6
 
             ctx.strokeStyle =
-              randomEmotion === "happy"
+              expression === "happy"
                 ? "#10B981"
-                : randomEmotion === "sad"
+                : expression === "sad"
                   ? "#3B82F6"
-                  : randomEmotion === "angry"
+                  : expression === "calm"
                     ? "#EF4444"
                     : "#6B7280"
-            ctx.lineWidth = 3
-            ctx.strokeRect(faceX, faceY, faceWidth, faceHeight)
 
-            // Draw emotion label
             ctx.fillStyle = ctx.strokeStyle
             ctx.font = "16px Arial"
-            ctx.fillText(`${randomEmotion} (${confidence}%)`, faceX, faceY - 10)
+            ctx.fillText(`${expression} (${confidence}%)`, faceX, faceY - 10)
           }
         }
-      }, 2000)
-    }
+      } catch (err) {
+        console.error("Error in ML interval:", err)
+      }
+    }, 2000)
+  }
 
-    return () => clearInterval(detectionInterval)
-  }, [isInRoom, isVideoOn, faceDetection.isActive])
+  return () => clearInterval(scoreInterval)
+}, [isInRoom, isVideoOn, faceDetection.isActive])
+
 
   useEffect(() => {
     let interval: NodeJS.Timeout
@@ -435,7 +448,7 @@ export default function VirtualMeditationRoom() {
           overallScore: Math.floor((faceDetection.confidence + Math.random() * 20) / 1.2),
           mlDetection: "active",
         }))
-      }, 3000)
+      }, 3000);
     }
     return () => clearInterval(interval)
   }, [isInRoom, faceDetection])
@@ -918,7 +931,7 @@ export default function VirtualMeditationRoom() {
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-gray-800">Join Public Sessions</h2>
         {availableSessions.map((session) => (
-          <Card key={session.id} className="hover:shadow-lg transition-shadow">
+          <Card key={session._id} className="hover:shadow-lg transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
